@@ -1,0 +1,84 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "./generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum DocumentStatus {
+  QUEUED
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
+enum TermType {
+  SPECIES
+  LATIN
+  GENUS
+  GROUP
+  PLACE
+  HABITAT
+  EVENT
+  OBSERVER
+  KEYWORD
+}
+
+model Document {
+  id           String         @id @default(uuid()) @db.Uuid
+  filename     String
+  mimeType     String
+  size         Int
+  bucket       String
+  objectKey    String         @unique
+  textObjectKey String?
+  aiFileId     String?
+  status       DocumentStatus @default(QUEUED)
+  error        String?
+  ocrUsed      Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  observations Observation[]
+}
+
+model Observation {
+  id            String            @id @default(uuid()) @db.Uuid
+  documentId    String            @db.Uuid
+  document      Document          @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  observedAt    DateTime?
+  observedYear  Int?
+  numericValue  Decimal?          @db.Decimal(18, 4)
+  numericUnit   String?
+  sourcePage    Int?
+  sourceExcerpt String?
+  notes         String?
+  terms         ObservationTerm[]
+  createdAt     DateTime          @default(now())
+
+  @@index([documentId])
+  @@index([observedAt])
+  @@index([observedYear])
+}
+
+model Term {
+  id           String            @id @default(uuid()) @db.Uuid
+  type         TermType
+  label        String
+  observations ObservationTerm[]
+
+  @@unique([type, label])
+  @@index([label])
+}
+
+model ObservationTerm {
+  observationId String      @db.Uuid
+  termId        String      @db.Uuid
+  observation   Observation @relation(fields: [observationId], references: [id], onDelete: Cascade)
+  term          Term        @relation(fields: [termId], references: [id], onDelete: Cascade)
+
+  @@id([observationId, termId])
+  @@index([termId])
+}

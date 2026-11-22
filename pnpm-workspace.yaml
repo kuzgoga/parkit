@@ -1,0 +1,6 @@
+allowBuilds:
+  '@prisma/engines': true
+  '@scarf/scarf': true
+  '@swc/core': false
+  msgpackr-extract: true
+  prisma: true
