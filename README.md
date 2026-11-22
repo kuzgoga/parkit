@@ -8,6 +8,12 @@ NestJS API for chronicle documents. Uploads go to S3/MinIO and a Bull queue. The
 2. Copy `.env.sample` to `.env`. Set the Postgres and S3 credentials, `YANDEX_API_KEY`, `YANDEX_FOLDER_ID` and `YANDEX_VECTOR_STORE_ID`. Keep `.env` local; it is ignored by Git.
 3. Run `pnpm install` and `pnpm start` (or `pnpm start:dev`). Prisma Client generation and committed migrations run on every start.
 
+### S3 storage
+
+`S3_ENDPOINT` is the address used by the locally started API, while `S3_CONTAINER_ENDPOINT` is used by the API in Docker Compose. `S3_PUBLIC_ENDPOINT` is the address placed into signed links opened by the browser. For the bundled MinIO these are `http://localhost:9000`, `http://minio:9000`, and `http://localhost:9000`, respectively. Set `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY`, and `S3_SECRET_KEY` in `.env` as well.
+
+For Yandex Object Storage, set all three endpoint variables to `https://storage.yandexcloud.net`, set `S3_REGION=ru-central1`, choose an existing bucket in `S3_BUCKET`, and supply a Yandex Object Storage **static access key ID and secret key** as `S3_ACCESS_KEY` and `S3_SECRET_KEY`. These are separate from `YANDEX_API_KEY` used by AI Studio. When running only through `pnpm`, `S3_CONTAINER_ENDPOINT` is unused. Compose keeps MinIO available even if the API points to Yandex Object Storage.
+
 The runtime image includes Poppler tools for PDF page inspection. For production, `docker compose up --build` starts the same services.
 
 ## API

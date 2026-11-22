@@ -26,7 +26,12 @@ export class StorageService implements OnModuleInit {
   async onModuleInit() {
     try {
       await this.client.send(new HeadBucketCommand({ Bucket: this.bucket }));
-    } catch {
+    } catch (error) {
+      if (
+        (error as { $metadata?: { httpStatusCode?: number } }).$metadata
+          ?.httpStatusCode !== 404
+      )
+        throw error;
       await this.client.send(new CreateBucketCommand({ Bucket: this.bucket }));
     }
   }

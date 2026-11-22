@@ -9,6 +9,7 @@ import { randomUUID } from "node:crypto";
 import { PrismaService } from "./prisma.service";
 import { StorageService } from "./storage.service";
 import type { Document } from "../prisma/generated/prisma/client";
+import { decodeFilename } from "./filename";
 
 @Injectable()
 export class DocumentsService {
@@ -28,13 +29,14 @@ export class DocumentsService {
         "Only PDF, TXT and Markdown files are supported",
       );
     }
-    const key = `documents/${randomUUID()}/${file.originalname.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    const filename = decodeFilename(file.originalname);
+    const key = `documents/${randomUUID()}/${filename.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
     await this.storage.upload(key, file.buffer, file.mimetype);
     let document: Document;
     try {
       document = await this.prisma.document.create({
         data: {
-          filename: file.originalname,
+          filename,
           mimeType: file.mimetype,
           size: file.size,
           bucket: this.storage.bucket,
