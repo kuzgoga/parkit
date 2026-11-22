@@ -89,6 +89,11 @@ export class DebugController {
 export class ChatController {
   constructor(private readonly yandex: YandexService) {}
 
+  @Post("report-plan")
+  reportPlan(@Body() body: ChatDto) {
+    return this.yandex.reportPlan(body.message);
+  }
+
   @Post()
   chat(@Body() body: ChatDto) {
     return this.yandex.chat(body.message, body.history);

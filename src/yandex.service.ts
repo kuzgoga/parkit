@@ -1,6 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { config, required } from "./configuration";
 
+import { reportInstructions, parseReportPlan } from "./report-plan";
+
 export const OCR_MAX_FILE_BYTES = 10_000_000;
 
 export interface ExtractedObservation {
@@ -298,6 +300,17 @@ export class YandexService {
         body: JSON.stringify({ query, max_num_results: 5 }),
       },
     );
+  }
+
+  async reportPlan(query: string) {
+    const response = await this.respond({
+      model: `gpt://${required(config.yandex.folderId, "YANDEX_FOLDER_ID")}/${config.yandex.model}`,
+      instructions: reportInstructions,
+      input: query,
+      temperature: 0,
+      text: { format: { type: "json_object" } },
+    });
+    return parseReportPlan(this.responseText(response));
   }
 
   async chat(message: string, history: ChatTurn[] = []) {

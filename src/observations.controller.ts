@@ -85,7 +85,7 @@ export class ObservationsController {
         document: { select: { id: true, filename: true } },
         terms: { include: { term: true } },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ createdAt: "desc" }, { id: "asc" }],
       skip,
       take,
     });
