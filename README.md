@@ -16,8 +16,9 @@ Swagger UI: `http://localhost:3000/api/docs`.
 
 - `POST /api/v1/documents` — multipart `file` (PDF, TXT or Markdown, up to 50 MB); returns queued document
 - `GET /api/v1/documents` and `GET /api/v1/documents/:id` — status, OCR flag, vector file ID and errors
+- `GET /api/v1/documents/:id/wait?status=QUEUED&timeoutMs=25000` — HTTP long poll; returns `{changed, document}` when the status changes or after at most 25 seconds
 - `GET /api/v1/documents/:id/source` — signed source URL
-- `GET /api/v1/observations` — strict, case-insensitive exact filters: `species`, `latin`, `genus`, `group`, `place`, `habitat`, `event`, `observer`, `keyword`, `yearFrom`, `yearTo`, `dateFrom`, `dateTo`; filters combine with AND
+- `GET /api/v1/observations` — strict, case-insensitive exact filters: `species`, `latin`, `genus`, `group`, `place`, `habitat`, `event`, `observer`, `keyword`, `yearFrom`, `yearTo`, `dateFrom`, `dateTo`; filters combine with AND; `skip` and `take` paginate results
 - `POST /api/v1/debug/ocr` — multipart `file`, inspect PDF text layer/OCR or OCR an image
 - `POST /api/v1/debug/llm` — JSON `{ "text": "..." }`, extract observations
 - `POST /api/v1/debug/rag` — JSON `{ "query": "..." }`, search the configured Vector Store
@@ -30,3 +31,5 @@ curl -F "file=@chronicle.pdf" http://localhost:3000/api/v1/documents
 ```
 
 The new index uses `Observation` plus typed `Term` labels and links to the original document/page. The migration retains the old observation columns and `Taxon` table in PostgreSQL to preserve existing data; the application uses only the simpler new structure.
+
+The Bun-powered frontend is in `../pasvik-site`; see its README for local startup and `API_URL` configuration.
