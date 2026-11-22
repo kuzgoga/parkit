@@ -1,0 +1,10 @@
+{
+  "name": "pasvik-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun scripts/build.js",
+    "start": "bun scripts/serve.js",
+    "dev": "bun run build && bun run start"
+  }
+}

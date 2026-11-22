@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f9f6">
+  <meta name="description" content="Поиск наблюдений по летописям природы заповедника «Пасвик».">
+  <title>Летописи природы · Пасвик</title>
+  <link rel="icon" href="data:,">
+  <script>
+    const prefersDark = matchMedia('(prefers-color-scheme: dark)').matches;
+    let savedTheme;
+    try { savedTheme = localStorage.getItem('pasvik-theme'); } catch {}
+    document.documentElement.dataset.theme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : (prefersDark ? 'dark' : 'light');
+  </script>
+  <link rel="stylesheet" href="./static/styles.css">
+</head>
+<body>
+  <div class="leaf-gutter" aria-hidden="true">
+    <span></span><span></span><span></span><span></span>
+  </div>
+  <div class="leaf-gutter leaf-gutter-right" aria-hidden="true">
+    <span></span><span></span><span></span><span></span>
+  </div>
+  <a class="skip" href="#main">К содержимому</a>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="#observations" aria-label="Пасвик, наблюдения">
+        <span class="brand-mark" data-icon="tree"></span> Пасвик
+      </a>
+      <nav aria-label="Разделы архива">
+        <a href="#observations" data-view="observations" aria-current="page">Наблюдения</a>
+        <a href="#volumes" data-view="volumes">Летописи</a>
+        <a href="#checks" data-view="checks">Проверка</a>
+      </nav>
+      <button class="icon-button theme-toggle" id="theme-toggle" type="button" aria-label="Тёмная тема" aria-pressed="false"></button>
+    </div>
+  </header>
+
+  <main id="main" class="shell" tabindex="-1">
+    <section id="observations" data-screen="observations" aria-labelledby="archive-title">
+      <div class="hero">
+        <div class="hero-content">
+          <h1 id="archive-title">Летописи природы</h1>
+          <p>Наблюдения из архива заповедника «Пасвик»</p>
+        </div>
+        <figure class="hero-image">
+          <img src="./static/pasvik-hero.webp" alt="">
+          <figcaption>Иллюстрация северной тайги</figcaption>
+        </figure>
+      </div>
+
+      <form id="filters" role="search" aria-label="Поиск по наблюдениям">
+        <div class="search-line">
+          <label class="search-field"><span data-icon="search"></span><span class="sr-only">Вид, фамилия, место или событие</span><input type="search" name="q" placeholder="Вид, место или запрос для Excel" maxlength="4000" autocomplete="off"></label>
+          <button class="button button-primary" type="submit">Найти</button>
+          <button class="button button-outline filter-toggle" id="filter-toggle" type="button" aria-expanded="false" aria-controls="filter-options"><span data-icon="filter"></span>Фильтры<span id="active-filters" class="filter-count" hidden></span></button>
+        </div>
+        <div class="filter-motion" id="filter-options" inert>
+          <div class="filter-clip">
+            <div class="filter-line">
+              <label class="filter-field"><span>Вид</span><select name="species"><option value="">Все виды</option></select></label>
+              <label class="filter-field"><span>Группа</span><select name="group"><option value="">Все группы</option></select></label>
+              <fieldset class="year-fields"><legend>Годы</legend><div>
+                <label><span class="sr-only">С года</span><select name="from"><option value="">С года</option></select></label>
+                <span class="year-separator" aria-hidden="true">–</span>
+                <label><span class="sr-only">По год</span><select name="to"><option value="">По год</option></select></label>
+              </div></fieldset>
+              <label class="filter-field"><span>Место</span><select name="place"><option value="">Все места</option></select></label>
+              <label class="filter-field"><span>Событие</span><select name="event"><option value="">Все события</option></select></label>
+              <label class="filter-field"><span>Латынь</span><input name="latin" placeholder="Точное название"></label>
+              <label class="filter-field"><span>Род</span><input name="genus" placeholder="Точный род"></label>
+              <label class="filter-field"><span>Наблюдатель</span><input name="observer" placeholder="Имя или фамилия"></label>
+              <label class="filter-field"><span>Местообитание</span><input name="habitat" placeholder="Точное значение"></label>
+              <label class="filter-field"><span>Ключевое слово</span><input name="keyword" placeholder="Точное слово"></label>
+              <label class="filter-field"><span>Дата с</span><input name="dateFrom" type="date"></label>
+              <label class="filter-field"><span>Дата по</span><input name="dateTo" type="date"></label>
+              <button class="button button-text" type="reset">Сбросить</button>
+              <p class="filter-error" id="filter-error" role="alert" hidden></p>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <section id="report-result" hidden aria-label="Отчёт Excel">
+        <p role="status" id="report-status"></p>
+        <a class="button button-primary" id="report-download" download="pasvik-report.xlsx" hidden>Скачать Excel</a>
+      </section>
+
+      <section class="results" aria-label="Результаты поиска">
+        <div class="results-head">
+          <p id="result-count" class="result-count" role="status">Загрузка…</p>
+          <div class="result-actions">
+            <details class="sort" id="sort">
+              <summary class="button button-outline"><span class="sr-only">Сортировка. </span><span id="sort-label">Сначала новые</span></summary>
+              <div class="sort-menu" role="group" aria-label="Сортировка">
+                <button type="button" data-sort="new" aria-pressed="true">Сначала новые</button>
+                <button type="button" data-sort="old" aria-pressed="false">Сначала ранние</button>
+                <button type="button" data-sort="name" aria-pressed="false">По названию вида</button>
+              </div>
+            </details>
+            <div class="export-actions" role="group" aria-label="Экспорт выборки">
+              <button class="button button-outline export-button" type="button" data-export="xlsx" aria-label="Скачать Excel" disabled>Excel</button>
+              <button class="button button-outline export-button" type="button" data-export="csv" aria-label="Скачать CSV" disabled>CSV</button>
+            </div>
+          </div>
+        </div>
+        <details class="timeline" id="timeline" hidden>
+          <summary>Активность по месяцам</summary>
+          <div class="timeline-content">
+            <p id="timeline-note">Выберите месяц, чтобы уточнить выдачу.</p>
+            <div class="timeline-grid" id="timeline-grid" role="group" aria-label="Наблюдения по месяцам"></div>
+          </div>
+        </details>
+        <div class="results-card">
+          <table class="results-table" id="results-table" hidden>
+            <thead><tr><th scope="col">Вид</th><th scope="col">Событие</th><th scope="col">Дата</th><th scope="col">Место</th><th scope="col">Источник</th></tr></thead>
+            <tbody id="results"></tbody>
+          </table>
+          <div class="empty" id="empty" hidden><h2 id="empty-title"></h2><p id="empty-text"></p></div>
+          <div id="pager" class="pagination" hidden>
+            <span id="page-summary"></span>
+            <div><button class="button button-outline" id="prev" type="button">Назад</button><button class="button button-outline" id="next" type="button">Далее</button></div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section id="volumes" data-screen="volumes" class="archive" aria-labelledby="volumes-title" hidden>
+      <div class="archive-head">
+        <div>
+          <h1 id="volumes-title">Летописи</h1>
+          <p>Загруженные документы и статус обработки.</p>
+        </div>
+        <button class="button button-outline archive-upload" id="open-upload" type="button"><span data-icon="upload"></span>Загрузить файл</button>
+      </div>
+      <p id="archive-notice" class="archive-notice" role="status" hidden></p>
+      <div class="volume-list" id="volume-list"></div>
+    </section>
+
+    <section id="checks" data-screen="checks" class="archive" aria-labelledby="checks-title" hidden>
+      <div class="archive-head"><div><h1 id="checks-title">Проверка пайплайна</h1><p>Проверьте OCR, извлечение полей и поиск по отдельности.</p></div></div>
+      <div class="check-grid">
+        <form id="ocr-check" class="check-card"><h2>OCR и текстовый слой</h2><input type="file" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" required><button class="button button-outline" type="submit">Проверить файл</button><pre aria-live="polite"></pre></form>
+        <form id="llm-check" class="check-card"><h2>Извлечение Qwen</h2><textarea placeholder="Вставьте фрагмент летописи" required></textarea><button class="button button-outline" type="submit">Извлечь данные</button><pre aria-live="polite"></pre></form>
+        <form id="rag-check" class="check-card"><h2>Поиск RAG</h2><input placeholder="Поисковый запрос" required><button class="button button-outline" type="submit">Найти фрагменты</button><pre aria-live="polite"></pre></form>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="record-dialog" class="record-dialog" aria-labelledby="record-title">
+    <div class="dialog-head"><span class="dialog-label">Наблюдение</span><form method="dialog"><button class="icon-button" type="submit" aria-label="Закрыть карточку"><span data-icon="close"></span></button></form></div>
+    <div id="record-content"></div>
+  </dialog>
+
+  <dialog id="upload-dialog" class="upload-dialog" aria-labelledby="upload-title">
+    <div class="upload-header">
+      <h2 id="upload-title">Загрузить летопись</h2>
+      <form method="dialog"><button id="close-upload" class="icon-button" type="submit" aria-label="Закрыть загрузку"><span data-icon="close"></span></button></form>
+    </div>
+    <form id="upload-form">
+      <p class="upload-hint" id="upload-hint">PDF, TXT или Markdown до 50 МБ. Обработка начнётся в очереди после загрузки.</p>
+      <label class="file-picker">
+        <span data-icon="file"></span><span id="file-label">Выбрать файл</span>
+        <input type="file" id="upload-file" accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown" aria-label="Выбрать файл" aria-describedby="upload-hint">
+      </label>
+      <p id="upload-message" class="upload-message" role="status" hidden></p>
+      <div class="upload-actions"><button id="upload-submit" type="submit" class="button button-primary" disabled>Загрузить</button></div>
+    </form>
+  </dialog>
+  <template id="icons">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+  </template>
+  <script type="module" src="./static/app.js"></script>
+  <script>
+    window.AiStudioChatWidgetConfig = {
+      channelId: 'aacohur22fi0h989vl73',
+      locale: 'ru',
+      position: 'bottom-right',
+      chatTrigger: {
+        animated: false,
+        appearance: { backgroundColor: '#004D59', size: '52px' },
+      },
+      chatContainer: {
+        appearance: { width: '400px', height: '600px' },
+      },
+      chat: {
+        appearance: { accentColor: '#004D59' },
+      },
+    };
+  </script>
+  <script src="https://widget.aistudio.yandexcloud.net/scripts/widget-loader.js" async></script>
+</body>
+</html>
